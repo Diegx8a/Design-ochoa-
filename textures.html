@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Texture Gallery — Ochoa Bookkeeping</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=EB+Garamond:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #FAFAF7;
+      --bone:  #F0EDE2;
+      --sage:  #F1F5EE;
+      --ink:   #0C0C0A;
+      --ink-40: rgba(12,12,10,.4);
+      --ink-60: rgba(12,12,10,.6);
+      --ink-10: rgba(12,12,10,.1);
+      --font-d: 'Cormorant Garamond', Georgia, serif;
+      --font-b: 'EB Garamond', Georgia, serif;
+      --font-m: 'JetBrains Mono', monospace;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-font-smoothing:antialiased}
+    body{background:var(--paper);color:var(--ink);font-family:var(--font-b)}
+
+    /* --- NAV --- */
+    .bar{
+      padding: 32px 60px 24px;
+      border-bottom: 1px solid var(--ink-10);
+      display: flex; align-items: baseline; justify-content: space-between;
+    }
+    .bar h1{font-family:var(--font-d);font-weight:300;font-size:2rem;letter-spacing:-.01em}
+    .bar p{font-family:var(--font-m);font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-40)}
+
+    /* --- INSTRUCTION --- */
+    .instruction{
+      padding: 32px 60px;
+      display:flex; gap:48px; align-items:center;
+      border-bottom: 1px solid var(--ink-10);
+    }
+    .instruction p{font-size:1rem;color:var(--ink-60);line-height:1.7;max-width:560px}
+    .scheme-btns{display:flex;gap:10px;flex-shrink:0}
+    .scheme-btn{
+      font-family:var(--font-m);font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;
+      padding:10px 18px;border:1px solid var(--ink);background:transparent;cursor:pointer;
+      transition:background .2s,color .2s;color:var(--ink);white-space:nowrap;
+    }
+    .scheme-btn.active,.scheme-btn:hover{background:var(--ink);color:var(--paper)}
+
+    /* --- PREVIEW BAND --- */
+    .preview-band{
+      padding: 48px 60px;
+      border-bottom: 1px solid var(--ink-10);
+      display:flex; gap:40px; align-items:center;
+    }
+    .preview-band-inner{
+      flex:1;
+      min-height:200px;
+      display:flex;flex-direction:column;justify-content:center;
+      padding:40px;
+      border:1px solid var(--ink-10);
+      transition:background-image .1s;
+      position:relative;
+      overflow:hidden;
+    }
+    .preview-band-inner::after{
+      content:'';position:absolute;inset:0;
+      background-image:var(--preview-tex);
+      background-size:var(--preview-size, 250px) var(--preview-size, 250px);
+      opacity:var(--preview-opacity, 0.042);
+      pointer-events:none;
+    }
+    .preview-band-inner h2{
+      font-family:var(--font-d);font-weight:300;font-size:3rem;
+      letter-spacing:-.01em;line-height:1.05;
+      margin-bottom:16px;position:relative;z-index:1;
+    }
+    .preview-band-inner h2 em{font-style:italic;font-weight:300}
+    .preview-band-inner p{font-size:1rem;color:var(--ink-60);position:relative;z-index:1}
+    .preview-label{
+      width:200px;flex-shrink:0;
+    }
+    .preview-label .ptitle{
+      font-family:var(--font-d);font-size:1.25rem;font-weight:500;
+      display:block;margin-bottom:6px;
+    }
+    .preview-label .pmono{
+      font-family:var(--font-m);font-size:.5rem;letter-spacing:.2em;
+      text-transform:uppercase;color:var(--ink-40);display:block;margin-bottom:16px;
+    }
+    .preview-label .pdesc{
+      font-size:.9375rem;color:var(--ink-60);line-height:1.65;
+    }
+
+    /* --- GRID --- */
+    .grid-head{
+      padding: 40px 60px 24px;
+    }
+    .grid-head span{
+      font-family:var(--font-m);font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;
+      color:var(--ink-40);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:2px;
+      padding:0 60px 80px;
+    }
+    .tex-card{
+      border:1px solid var(--ink-10);
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+      transition:border-color .2s;
+    }
+    .tex-card:hover,.tex-card.selected{border-color:var(--ink)}
+    .tex-card.selected::before{
+      content:'SELECTED';
+      position:absolute;top:16px;right:16px;
+      font-family:var(--font-m);font-size:.45rem;letter-spacing:.2em;
+      background:var(--ink);color:var(--paper);padding:4px 10px;
+      z-index:10;
+    }
+
+    /* Swatch area */
+    .swatch{
+      height:220px;
+      position:relative;
+      overflow:hidden;
+      transition:background .2s;
+    }
+    .swatch-tex{
+      position:absolute;inset:0;
+      background-size:250px 250px;
+      background-repeat:repeat;
+    }
+    .swatch-text{
+      position:absolute;inset:0;
+      display:flex;flex-direction:column;justify-content:center;
+      padding:32px;
+    }
+    .swatch-text h3{
+      font-family:var(--font-d);font-weight:300;font-size:2rem;
+      letter-spacing:-.01em;line-height:1.05;margin-bottom:10px;
+    }
+    .swatch-text h3 em{font-style:italic}
+    .swatch-text p{font-size:.9375rem;color:var(--ink-60);line-height:1.65}
+
+    /* Card footer */
+    .card-foot{
+      padding:20px 24px;
+      border-top:1px solid var(--ink-10);
+      display:flex;align-items:baseline;justify-content:space-between;
+      gap:16px;
+    }
+    .tex-name{
+      font-family:var(--font-d);font-weight:500;font-size:1.125rem;
+    }
+    .tex-desc{
+      font-family:var(--font-m);font-size:.5rem;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--ink-40);
+    }
+    .tex-vibe{
+      font-family:var(--font-b);font-size:.875rem;color:var(--ink-60);font-style:italic;
+    }
+
+    @media(max-width:800px){
+      .bar,.instruction,.preview-band,.grid-head{padding-left:24px;padding-right:24px}
+      .grid{grid-template-columns:1fr;padding-left:24px;padding-right:24px}
+      .instruction{flex-direction:column;gap:20px}
+      .preview-band{flex-direction:column}
+      .preview-label{width:auto}
+    }
+  </style>
+</head>
+<body>
+
+<div class="bar">
+  <h1>Texture Gallery</h1>
+  <p>Click any card to preview · Ochoa Bookkeeping</p>
+</div>
+
+<div class="instruction">
+  <p>Click any texture card to preview it at scale in the panel above. Toggle between Bone and Sage backgrounds to see how each texture behaves on both color schemes. When you've chosen one, tell Diego which number you want applied to V3–V6.</p>
+  <div class="scheme-btns">
+    <button class="scheme-btn active" data-scheme="bone">Bone bg</button>
+    <button class="scheme-btn" data-scheme="sage">Sage bg</button>
+    <button class="scheme-btn" data-scheme="white">White bg</button>
+  </div>
+</div>
+
+<!-- LIVE PREVIEW BAND -->
+<div class="preview-band">
+  <div class="preview-band-inner" id="preview-box" style="background:var(--bone);">
+    <h2>Books, kept <em>quietly</em>,<br>kept right.</h2>
+    <p>A steady hand for the numbers that run your business.</p>
+  </div>
+  <div class="preview-label">
+    <span class="ptitle" id="preview-name">Fine Grain</span>
+    <span class="pmono" id="preview-num">Texture 01</span>
+    <p class="pdesc" id="preview-desc">Subtle film grain. The default pick — reads like premium photo paper at any scale.</p>
+  </div>
+</div>
+
+<div class="grid-head">
+  <span>10 Textures — click to preview</span>
+</div>
+
+<div class="grid" id="tex-grid">
+  <!-- Cards injected by JS -->
+</div>
+
+<script>
+const TEXTURES = [
+  {
+    id: 1,
+    name: 'Fine Grain',
+    vibe: 'Premium photo paper',
+    desc: 'Subtle film grain at high frequency. Barely-there quality. My default recommendation for V3–V6.',
+    size: 250,
+    opacity: 0.042,
+    css: buildNoise('fractalNoise', '0.65', 3, 1)
+  },
+  {
+    id: 2,
+    name: 'Medium Grain',
+    vibe: 'Developed film print',
+    desc: 'One step coarser than fine grain. Still elegant — reads more like a matte print.',
+    size: 280,
+    opacity: 0.048,
+    css: buildNoise('fractalNoise', '0.45', 4, 1)
+  },
+  {
+    id: 3,
+    name: 'Coarse Grain',
+    vibe: 'Silver gelatin photo',
+    desc: 'Clearly visible grain structure. Bold texture statement — best used lightly.',
+    size: 320,
+    opacity: 0.038,
+    css: buildNoise('fractalNoise', '0.25', 5, 1)
+  },
+  {
+    id: 4,
+    name: 'Cotton Rag',
+    vibe: 'Currency paper',
+    desc: 'Anisotropic noise — stronger in one axis. Creates the faint fiber look of cotton rag stock.',
+    size: 260,
+    opacity: 0.052,
+    css: buildNoise('fractalNoise', '0.35 0.06', 4, 1)
+  },
+  {
+    id: 5,
+    name: 'Pressed Paper',
+    vibe: 'Hand-pressed stock',
+    desc: 'Low-frequency, high-octave noise. Organic, slightly uneven — like a letterpress impression.',
+    size: 400,
+    opacity: 0.038,
+    css: buildNoise('fractalNoise', '0.15', 6, 1)
+  },
+  {
+    id: 6,
+    name: 'Watercolor Wash',
+    vibe: 'Watercolor paper',
+    desc: 'Non-fractal turbulence at very low frequency. Creates soft tonal variation, like a gentle wash.',
+    size: 500,
+    opacity: 0.035,
+    css: buildNoise('turbulence', '0.02 0.04', 4, 1)
+  },
+  {
+    id: 7,
+    name: 'Dust',
+    vibe: 'Aged daguerreotype',
+    desc: 'Very high frequency, single octave. Fine random speckle — like dust particles on old paper.',
+    size: 200,
+    opacity: 0.055,
+    css: buildNoise('fractalNoise', '0.9', 1, 1)
+  },
+  {
+    id: 8,
+    name: 'Laid Paper',
+    vibe: 'Writing paper stock',
+    desc: 'Faint horizontal lines, like traditional laid writing paper. Clean, quiet, very editorial.',
+    size: null,
+    opacity: 1,
+    css: "repeating-linear-gradient(0deg, transparent 0px, transparent 7px, rgba(12,12,10,0.022) 7px, rgba(12,12,10,0.022) 8px)"
+  },
+  {
+    id: 9,
+    name: 'Linen',
+    vibe: 'Linen hardcover book',
+    desc: 'Fine crosshatch at very low opacity. Suggests fabric without shouting it.',
+    size: null,
+    opacity: 1,
+    css: "repeating-linear-gradient(0deg,transparent 0,transparent 9px,rgba(12,12,10,0.016) 9px,rgba(12,12,10,0.016) 10px),repeating-linear-gradient(90deg,transparent 0,transparent 9px,rgba(12,12,10,0.016) 9px,rgba(12,12,10,0.016) 10px)"
+  },
+  {
+    id: 10,
+    name: 'Diagonal Hatch',
+    vibe: 'Architect tracing paper',
+    desc: 'Subtle 45° diagonal lines. Adds directionality and a quiet precision to the surface.',
+    size: null,
+    opacity: 1,
+    css: "repeating-linear-gradient(45deg,transparent 0,transparent 11px,rgba(12,12,10,0.018) 11px,rgba(12,12,10,0.018) 12px)"
+  }
+];
+
+function buildNoise(type, freq, octaves, opacity) {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='${type}' baseFrequency='${freq}' numOctaves='${octaves}' stitchTiles='stitch'/></filter><rect width='300' height='300' filter='url(%23n)' opacity='${opacity}'/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg).replace(/%20/g,'+')}")`;
+}
+
+// Also update TEXTURES after function definition
+TEXTURES[0].css = buildNoise('fractalNoise', '0.65', 3, 1);
+TEXTURES[1].css = buildNoise('fractalNoise', '0.45', 4, 1);
+TEXTURES[2].css = buildNoise('fractalNoise', '0.25', 5, 1);
+TEXTURES[3].css = buildNoise('fractalNoise', '0.35 0.06', 4, 1);
+TEXTURES[4].css = buildNoise('fractalNoise', '0.15', 6, 1);
+TEXTURES[5].css = buildNoise('turbulence', '0.02 0.04', 4, 1);
+TEXTURES[6].css = buildNoise('fractalNoise', '0.9', 1, 1);
+
+let currentScheme = 'bone';
+let selectedId = 1;
+
+const schemeColors = { bone: '#F0EDE2', sage: '#F1F5EE', white: '#FAFAF7' };
+
+function getSwatchBg(scheme) {
+  return schemeColors[scheme] || schemeColors.bone;
+}
+
+function renderCards() {
+  const grid = document.getElementById('tex-grid');
+  grid.innerHTML = '';
+  TEXTURES.forEach(tex => {
+    const card = document.createElement('div');
+    card.className = 'tex-card' + (tex.id === selectedId ? ' selected' : '');
+    card.dataset.id = tex.id;
+
+    const bgColor = getSwatchBg(currentScheme);
+    const isCSS = tex.size === null;
+    const swatchStyle = isCSS
+      ? `background-color:${bgColor};`
+      : `background-color:${bgColor};`;
+
+    let texLayerStyle = '';
+    if (isCSS) {
+      texLayerStyle = `background-image:${tex.css};background-size:auto;opacity:${tex.opacity};`;
+    } else {
+      texLayerStyle = `background-image:${tex.css};background-size:${tex.size}px ${tex.size}px;opacity:${tex.opacity};`;
+    }
+
+    card.innerHTML = `
+      <div class="swatch" style="${swatchStyle}">
+        <div class="swatch-tex" style="${texLayerStyle}"></div>
+        <div class="swatch-text">
+          <h3>Books, kept <em>quietly</em>,<br>kept right.</h3>
+          <p>A steady hand for the numbers.</p>
+        </div>
+      </div>
+      <div class="card-foot">
+        <div>
+          <div class="tex-name">${tex.name}</div>
+          <div class="tex-vibe">${tex.vibe}</div>
+        </div>
+        <div class="tex-desc">0${tex.id}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => selectTexture(tex.id));
+    grid.appendChild(card);
+  });
+}
+
+function selectTexture(id) {
+  selectedId = id;
+  const tex = TEXTURES.find(t => t.id === id);
+  const box = document.getElementById('preview-box');
+  const isCSS = tex.size === null;
+
+  // Update preview via CSS custom properties
+  const root = document.documentElement;
+  root.style.setProperty('--preview-tex', tex.css);
+  root.style.setProperty('--preview-size', isCSS ? 'auto' : tex.size + 'px');
+  root.style.setProperty('--preview-opacity', tex.opacity);
+
+  document.getElementById('preview-name').textContent = tex.name;
+  document.getElementById('preview-num').textContent = `Texture 0${id}`;
+  document.getElementById('preview-desc').textContent = tex.desc;
+
+  renderCards();
+}
+
+// Scheme toggle
+document.querySelectorAll('.scheme-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentScheme = btn.dataset.scheme;
+    document.querySelectorAll('.scheme-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // Update preview box background
+    document.getElementById('preview-box').style.background = getSwatchBg(currentScheme);
+    renderCards();
+  });
+});
+
+// Init
+renderCards();
+selectTexture(1);
+</script>
+</body>
+</html>
